@@ -31,8 +31,10 @@ def setup_shutdown_handler(sig: int, frame: types.FrameType | None) -> None:
     signal_name = signal.Signals(sig).name
     logger.info(f"Received signal {sig} ({signal_name}), shutting down...")
 
-    # Exit the process
-    sys.exit(0)
+    # Exit immediately instead of raising SystemExit. The stdio transport reads stdin on a worker thread that
+    # cannot be cancelled, so a normal interpreter shutdown blocks on it, and a second signal during that wait
+    # makes CPython abort ("Fatal Python error: _enter_buffered_busy").
+    os._exit(0)
 
 
 def add_allowed_tools(service_tool_modules: tuple[Any, ...], allowed_tools: set[str], add_tool: AddTool) -> None:
